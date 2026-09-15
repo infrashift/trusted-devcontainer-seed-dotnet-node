@@ -50,7 +50,7 @@ RUN dnf5 -y install --allowerasing --setopt=install_weak_deps=False \
 # would present as a workspace that starts, reports healthy on its container,
 # and refuses every connection.
 # postgresql is the CLIENT (psql): this workspace has a companion database
-# (services/db, declared in .shadowforge/services.json) and the devpod verify
+# (services/db, declared in .devcontainer/services.json) and the devpod verify
 # reaches it from inside the workspace by Consul VIP DNS with psql -- the
 # proof that the mesh, the DNS and the intention all hold from the
 # developer's own shell.
