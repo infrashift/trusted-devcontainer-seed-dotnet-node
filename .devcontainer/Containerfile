@@ -49,25 +49,33 @@ RUN dnf5 -y install --allowerasing --setopt=install_weak_deps=False \
 # Code Remote-SSH connects to. It is NOT in the trusted base, and its absence
 # would present as a workspace that starts, reports healthy on its container,
 # and refuses every connection.
-# postgresql is the CLIENT (psql), and it stays even though THIS workspace's
-# companion database is SQL Server (services/db, declared in
-# .devcontainer/services.json). It is here for the platform's BUILT-IN demo
-# PostgreSQL, which devpod verify check 8 probes from inside the workspace by
-# Consul VIP DNS with psql -- the proof that the mesh, the DNS and the intention
-# all hold from the developer's own shell.
-# There is deliberately NO sqlcmd here. The companion's own health check runs
-# INSIDE that container, where Microsoft's image already carries
-# /opt/mssql-tools18/bin/sqlcmd; putting a client in this image would mean
-# admitting packages.microsoft.com through the egress allow-list and proxying it
-# in Nexus, which is a platform decision and not one this seed should take on
-# its own. A .NET workspace reaches SQL Server through Microsoft.Data.SqlClient,
-# which needs no CLI at all.
+# THERE IS NO DATABASE CLIENT HERE, neither psql nor sqlcmd, and both absences
+# are deliberate.
+#
+# psql was here while this seed's companion was PostgreSQL. It is gone with it.
+# The devpod verify check that used it -- check 8, the built-in demo database
+# over Consul VIP DNS -- runs only `when: (workspace_services | length) == 0',
+# and this seed DECLARES a companion, so the built-in database is never deployed
+# beside this workspace and that check never runs. Check 13, the bastion path,
+# probes with psql only on port 5432 and with a plain TCP connect otherwise, so
+# it does not want one either. Keeping psql would have been a client for a
+# server this workspace does not have.
+#
+# sqlcmd is not added in its place. The companion's health check runs INSIDE
+# that container, where Microsoft's image already carries
+# /opt/mssql-tools18/bin/sqlcmd. Putting a client HERE would mean admitting
+# packages.microsoft.com through the egress allow-list and proxying it in Nexus
+# -- a platform decision, not one a seed should take on the platform's behalf --
+# and a .NET workspace reaches SQL Server through Microsoft.Data.SqlClient,
+# which needs no CLI at all. services/db/init.sql says how to apply it with the
+# companion's own sqlcmd.
+#
 # openssh-clients is the SSH CLIENT: what `git push' to the forge runs, over
 # the agent VS Code forwards from the developer's laptop. Not a dependency of
 # openssh-server on Fedora, and its absence presents as git saying
 # "ssh: command not found" inside a workspace that sshd serves perfectly well.
 RUN dnf5 -y install --setopt=install_weak_deps=False \
-        openssh-server openssh-clients rsync git postgresql \
+        openssh-server openssh-clients rsync git \
     && dnf5 clean all && rm -rf /var/cache/dnf \
     && ssh-keygen -A
 
