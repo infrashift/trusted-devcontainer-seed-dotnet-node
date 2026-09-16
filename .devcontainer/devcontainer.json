@@ -9,7 +9,7 @@
         "ghcr.io/infrashift/trusted-devcontainer-features/bootstrap@sha256:071c527c9e6e7acc87556bc8ef6b495a59f2f5569ff97c796e95148a3c9fd97c": {},
         "ghcr.io/infrashift/trusted-devcontainer-features/make@sha256:22e0f07f3b69d93b1dc9c85b09020021c194cf4a76094ed88dbcc73dcb588a85": {},
         "ghcr.io/infrashift/trusted-devcontainer-features/dotnet@sha256:b0b8268b88d3d38ac2e39995fb98682e6b4d9581374368d68406ae529f3aae17": {},
-        "ghcr.io/infrashift/trusted-devcontainer-features/sqlpackage@sha256:e1f2647d11aacb41377913fc25043373bf73ddafd246b1ba40563724155d50a0": {},
+        "ghcr.io/infrashift/trusted-devcontainer-features/sqlpackage@sha256:99bc0b766665535cfdcff1df12d437ef3dad571654a4369aa8c5ec6369d13e0a": {},
         "ghcr.io/infrashift/trusted-devcontainer-features/nodejs@sha256:c37faa359ab93bc1268f199507cd51948c9ec8bdffdfbb80fc0a07402d7dfca2": {},
         "ghcr.io/infrashift/trusted-devcontainer-features/npm@sha256:c216a7922a8483566933a06eaa3bd8f241a42df2987fa87670b01690acdd2e35": {},
         "ghcr.io/infrashift/trusted-devcontainer-features/pnpm@sha256:960da3fc7080f1d53f85f91ad2a9f27879e44781c297517fa147aeef151f6fd4": {},
