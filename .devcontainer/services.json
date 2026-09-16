@@ -1,15 +1,21 @@
 {
-  "_comment": "Companion services the forge builds beside the devcontainer and the devpod root deploys next to the workspace. Validated by the forge against its closed schema (app/internal/services/services.cue): a typo here is a red pull request naming this file. Defaults are left out on purpose -- dockerfile, protocol, interval -- so the services.json the forge publishes for a build visibly differs from this source: THAT file, with every default filled, is what an operator passes to the devpod root.",
+  "_comment": "Companion services the forge builds beside the devcontainer and the devpod root deploys next to the workspace. Validated by the forge against its closed schema (app/internal/services/services.cue): a typo here is a red pull request naming this file. Defaults are left out on purpose -- dockerfile, protocol, and resources' other half when only one is named -- so the services.json the forge publishes for a build visibly differs from this source: THAT file, with every default filled, is what an operator passes to the devpod root. THE SERVICE IS STILL CALLED `db': its name is the workspace's DB_HOST/DB_PORT pair, its Consul service, its host volume and its bastion target, and none of those are about which engine answers -- renaming it would move six roster files to say nothing new. SQL Server differs from the PostgreSQL seeds in three DECLARED ways: it runs as uid 10001 and must own its volume (volume_uid), it refuses to start under 2 GB (resources), and its health is proved by sqlcmd against the engine rather than by a readiness binary.",
   "services": [
     {
       "name": "db",
       "context_dir": "services/db",
-      "port": 5432,
+      "port": 1433,
       "persistent": true,
-      "mount_path": "/var/lib/postgresql/data",
+      "mount_path": "/var/opt/mssql",
+      "volume_uid": 10001,
+      "resources": {
+        "cpu": 500,
+        "memory_mb": 3072
+      },
       "health_check": {
         "type": "script",
-        "command": "pg_isready -q -h 127.0.0.1 -p 5432"
+        "command": "/opt/mssql-tools18/bin/sqlcmd -C -S 127.0.0.1 -U sa -P \"$MSSQL_SA_PASSWORD\" -b -Q \"SELECT 1\"",
+        "interval_s": 20
       }
     }
   ]
