@@ -33,7 +33,7 @@ is committed here -- so the provenance is recorded above and regenerated with:
 `make verify` in the devpod root asks the image which tools it declares
 (check 6). This image's list:
 
-    WORKSPACE_TOOLS=dotnet,node,npm,pnpm,jq,yq,git,git-lfs,syft,grype
+    WORKSPACE_TOOLS=make,dotnet,sqlpackage,node,npm,pnpm,jq,yq,git,git-lfs,syft,grype
 
 ## The three copies
 

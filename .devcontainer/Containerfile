@@ -67,7 +67,21 @@ RUN dnf5 -y install --allowerasing --setopt=install_weak_deps=False \
 # packages.microsoft.com through the egress allow-list and proxying it in Nexus
 # -- a platform decision, not one a seed should take on the platform's behalf --
 # and a .NET workspace reaches SQL Server through Microsoft.Data.SqlClient,
-# which needs no CLI at all. services/db/init.sql says how to apply it with the
+# which needs no CLI at all.
+#
+# SQLPACKAGE IS PRESENT, AND IT IS NOT A COUNTER-EXAMPLE. It arrives as a
+# devcontainer feature that installs the microsoft.sqlpackage .NET tool from
+# api.nuget.org -- a host this workspace already reaches for `dotnet restore',
+# through the same Nexus group. It is what deploys a DACPAC and exports or
+# imports a BACPAC; it is not a client you type queries into. The zip at aka.ms
+# would have crossed exactly the boundary the paragraph above declines.
+#
+# MAKE IS PRESENT TOO, and its absence was a bug. This repository's golden
+# workflow is spelled `make all' in its own README and in the RDW developer
+# guides, and the base image carries no make -- so every developer who followed
+# those instructions in a workspace got `make: command not found'. The pipeline
+# never hit it: it runs `make build test' in the RUNNER image, which was given
+# make months ago. services/db/init.sql says how to apply it with the
 # companion's own sqlcmd.
 #
 # openssh-clients is the SSH CLIENT: what `git push' to the forge runs, over
