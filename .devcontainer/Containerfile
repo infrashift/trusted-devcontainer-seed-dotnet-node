@@ -49,11 +49,19 @@ RUN dnf5 -y install --allowerasing --setopt=install_weak_deps=False \
 # Code Remote-SSH connects to. It is NOT in the trusted base, and its absence
 # would present as a workspace that starts, reports healthy on its container,
 # and refuses every connection.
-# postgresql is the CLIENT (psql): this workspace has a companion database
-# (services/db, declared in .devcontainer/services.json) and the devpod verify
-# reaches it from inside the workspace by Consul VIP DNS with psql -- the
-# proof that the mesh, the DNS and the intention all hold from the
-# developer's own shell.
+# postgresql is the CLIENT (psql), and it stays even though THIS workspace's
+# companion database is SQL Server (services/db, declared in
+# .devcontainer/services.json). It is here for the platform's BUILT-IN demo
+# PostgreSQL, which devpod verify check 8 probes from inside the workspace by
+# Consul VIP DNS with psql -- the proof that the mesh, the DNS and the intention
+# all hold from the developer's own shell.
+# There is deliberately NO sqlcmd here. The companion's own health check runs
+# INSIDE that container, where Microsoft's image already carries
+# /opt/mssql-tools18/bin/sqlcmd; putting a client in this image would mean
+# admitting packages.microsoft.com through the egress allow-list and proxying it
+# in Nexus, which is a platform decision and not one this seed should take on
+# its own. A .NET workspace reaches SQL Server through Microsoft.Data.SqlClient,
+# which needs no CLI at all.
 # openssh-clients is the SSH CLIENT: what `git push' to the forge runs, over
 # the agent VS Code forwards from the developer's laptop. Not a dependency of
 # openssh-server on Fedora, and its absence presents as git saying

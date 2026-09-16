@@ -1,31 +1,72 @@
-# The workspace's companion database: PostgreSQL, built by the forge from this
-# directory and published beside the devcontainer as
-# <namespace>/python-workspace-db:<rev>, then deployed by the devpod root as its
-# own job on the mesh. The workspace reaches it at $DB_HOST:$DB_PORT.
+# The workspace's companion database: Microsoft SQL Server 2025, built by the
+# forge from this directory and published beside the devcontainer as
+# <namespace>/<repository>-db:<rev>, then deployed by the devpod root as its own
+# job on the mesh. The workspace reaches it at $DB_HOST:$DB_PORT.
+#
+# STILL `db', NOT `mssql'. The service name is the workspace's DB_HOST/DB_PORT
+# pair, its Consul service, its host volume and its bastion target. None of
+# those say which engine answers, and renaming them would edit six roster files
+# to express nothing.
 #
 # FROM THE PLATFORM'S HOSTED REPOSITORY, BY NAME. The package policy
 # (nexus-uar/config/package-policy.json, block-docker-unvetted-databases)
 # refuses database images from Docker Hub: "Database images must come from
 # the platform team's hosted repository". That repository is
 # oci-images-internal, named here as a repository and never as an address --
-# the forge's warm stage puts this datacenter's pull door in front of it.
-# The platform team mirrored the amd64 manifest of
-# docker.io/library/postgres:16-alpine there, digest-for-digest.
+# a committed file must not carry a cluster IP, which is wrong on every other
+# datacenter, and the pipeline's base-image step puts this datacenter's pull
+# door in front of it. The image arrives there via ci/base-images.json and
+# `make -C terraform/live/gitlab mirror-base-images'; until that has run on a
+# datacenter, the build fails naming this reference, which is the correct
+# failure.
 #
-# PINNED BY DIGEST, because the forge's warm stage refuses a tag: a tag can
-# be moved, and two builds of one revision would then build FROM different
-# bytes while claiming the same input. Read the digest with
-#   skopeo inspect --raw docker://<door>/oci-images-internal/postgres:16-alpine
-FROM oci-images-internal/postgres@sha256:075f7ba66bc9b3ce7d6b8b635208ff61cd7cf1a67d71ec530eec5d7ae0cbe571
+# WHAT IT IS A COPY OF. github.com/infrashift/trusted-service-containers mirrors
+# mcr.microsoft.com/mssql/rhel/server:2025-latest digest-for-digest, verifying
+# Microsoft's Notary signature against a pinned root CA and signing identity.
+# The mirror never rebuilds, so this image IS Microsoft's, byte for byte: the
+# entrypoint, the uid and the data directory below are theirs, not ours. The
+# RHEL 10 base is chosen over the Ubuntu mssql/server repository to match the
+# platform's UBI posture.
+#
+# PRE-PROMOTION, DELIBERATELY. That repository's pull request #9 is open and its
+# release workflow has not promoted this image to trusted/ yet -- trusted/mssql
+# does not exist. The DIGEST does not change on promotion, only the path, so
+# when it lands nothing here moves: ci/base-images.json re-points its upstream
+# and re-mirrors, and this FROM line is already correct. Two cautions: that
+# repository's cleanup workflow DELETES the development/ image when the pull
+# request closes (promote first, then close), and versions.json onboards mssql
+# in `observe' expecting a ~700 MB RHEL image to quarantine, in which case
+# promotion lands under quarantine/ and no trusted/ path ever appears.
+#
+# PINNED BY DIGEST, because the build refuses a tag: a tag can be moved, and two
+# builds of one revision would then build FROM different bytes while claiming
+# the same input. This is a bare amd64 manifest -- Microsoft ships no index and
+# supports x86-64 hosts only -- so the digest below is the manifest's own, not
+# an index's. Read it with
+#   skopeo inspect --raw docker://<door>/oci-images-internal/mssql@sha256:54b58c3a...
+FROM oci-images-internal/mssql@sha256:54b58c3af8156b1b25049ac2c9c47ae18e422b537dbf251588b2d45278f1fd1a
 
-# The demo credentials the workspace's psql uses; the same trio the built-in
-# demo database ships with, so a developer moving from one to the other
-# changes nothing in their code.
-ENV POSTGRES_USER=demouser \
-    POSTGRES_PASSWORD=demopass \
-    POSTGRES_DB=demodb
+# The container refuses to start without the EULA accepted and a system
+# administrator password that meets SQL Server's own policy: at least 8
+# characters from three of the four classes. A password that fails it does not
+# produce a clear message -- sqlservr exits and the allocation restarts -- which
+# is why `demopass', the trio the PostgreSQL seeds bake, could not be reused.
+#
+# A DEMO CREDENTIAL, baked into the image exactly as those seeds bake
+# demouser/demopass, and readable by anyone who can pull this namespace. It
+# gates a workspace's throwaway database and nothing else; the README says so.
+# Developer edition is free for non-production use, which is what a workspace is
+# -- naming a production edition here would assert a licence nobody holds.
+ENV ACCEPT_EULA=Y \
+    MSSQL_SA_PASSWORD=DemoPass-123 \
+    MSSQL_PID=Developer
 
-# Seeded on first start. This layer is also what makes the image demonstrably
-# non-empty: the forge refuses a service image whose largest layer is under
-# 512 bytes, and a Containerfile of ENV lines alone would produce exactly that.
-COPY init.sql /docker-entrypoint-initdb.d/00-workspace.sql
+# NOT APPLIED ON FIRST START, and that is a real difference from the PostgreSQL
+# seeds. SQL Server's image has no init-script hook: there is no equivalent of
+# /docker-entrypoint-initdb.d, and the mirror cannot add one without ceasing to
+# be a byte-identical copy. It ships here for the developer to apply once --
+# services/db/init.sql says how -- and it is also what makes the image
+# demonstrably non-empty: the build refuses a service image whose largest layer
+# is under 512 bytes, and a Containerfile of ENV lines alone produces exactly
+# that.
+COPY init.sql /var/opt/mssql-init/00-workspace.sql

@@ -23,7 +23,8 @@ is yours.
     .devcontainer/services.json
                             companion services the forge builds beside the
                             devcontainer and the platform deploys next to it
-    services/db/            one of them: a PostgreSQL for the workspace
+    services/db/            one of them: a Microsoft SQL Server for the
+                            workspace, reached at $DB_HOST:$DB_PORT
     .gitignore              refuses key material and SSH configuration -- every
                             key you hold is generated in Vault and arrives
                             through the onboarding bundle, never through git

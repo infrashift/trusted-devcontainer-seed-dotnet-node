@@ -27,7 +27,7 @@ is committed here -- so the provenance is recorded above and regenerated with:
 | `entrypoint.sh`, `config/sshd_config`, `config/ssh-login.sh` | The workspace runtime contract — the third is the `ForceCommand` the second names |
 | `workspace-skel/` | Copied into an EMPTY host volume by the jobspec's prestart task |
 | `/etc/profile.d/dotnet-node.sh` | The `dotnet`, `nodejs` and `pnpm` features install under `~/.local/share/<tool>` and declare `DOTNET_ROOT`, `PNPM_HOME` and `PATH` with `/home/dev` written in; this renders them on `$HOME` for the SSH login shell, which sshd would otherwise start without them |
-| `postgresql` (the `psql` client) | This workspace has a companion database (`services/db`) and the verify reaches it with `psql` from inside |
+| `postgresql` (the `psql` client) | For the platform's **built-in** demo PostgreSQL, which verify check 8 reaches with `psql` from inside. This workspace's own companion (`services/db`) is Microsoft SQL Server; no `sqlcmd` is installed here, because that would mean admitting `packages.microsoft.com` through the egress allow-list, and the companion's health check runs inside its own container where Microsoft's image already carries one |
 ## What the image carries, for the devpod verify
 
 `make verify` in the devpod root asks the image which tools it declares
