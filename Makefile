@@ -100,6 +100,13 @@ all: build test dist image sbom scan ## The golden workflow, in order
 deps: ## Fetch dependencies so every later step can run offline (NETWORKED)
 	@sh scripts/deps.sh
 
+# DELIBERATELY NOT IN `all'. A pin being old is not a defect -- immutability is
+# the point of pinning -- and the answer changes when someone ELSE releases, so
+# gating the golden workflow on it would let an unrelated repository's merge
+# break this one. It is a question you ask, not a rule you enforce.
+check-pins: ## Report which feature pins have drifted behind the trusted line (NETWORKED)
+	@sh scripts/check-pins.sh $(if $(STRICT),--strict,)
+
 # THE PREREQUISITES HOLD ON ONE MACHINE AND CANNOT HOLD ON FOUR.
 #
 # `image' needing `dist' needing `build' is exactly right when a single machine
